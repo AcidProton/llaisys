@@ -17,7 +17,7 @@ def test_tensor():
     llaisys_tensor.debug()
     assert llaisys_tensor.is_contiguous() == torch_tensor.is_contiguous()
     assert check_equal(llaisys_tensor, torch_tensor)
-
+    
     # Test view
     print("===Test view===")
     torch_tensor_view = torch_tensor.view(6, 10)
@@ -27,11 +27,14 @@ def test_tensor():
     assert llaisys_tensor_view.strides() == torch_tensor_view.stride()
     assert llaisys_tensor.is_contiguous() == torch_tensor.is_contiguous()
     assert check_equal(llaisys_tensor_view, torch_tensor_view)
-
+    
     # Test permute
     print("===Test permute===")
     torch_tensor_perm = torch_tensor.permute(2, 0, 1)
     llaisys_tensor_perm = llaisys_tensor.permute(2, 0, 1)
+    print(torch_tensor_perm.shape)
+    print(torch_tensor_perm.stride())
+    print(torch_tensor_perm)
     llaisys_tensor_perm.debug()
     assert llaisys_tensor_perm.shape() == torch_tensor_perm.shape
     assert llaisys_tensor_perm.strides() == torch_tensor_perm.stride()

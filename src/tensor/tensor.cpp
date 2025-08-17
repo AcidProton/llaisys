@@ -164,27 +164,64 @@ void Tensor::debug() const {
 }
 
 bool Tensor::isContiguous() const {
-    TO_BE_IMPLEMENTED();
+    size_t _ndim = ndim();
+    ptrdiff_t expect_stride = 1;
+    for(int i=_ndim-1; i>=0; i--){
+        if(strides()[i]!=expect_stride){
+            return false;
+        }
+        expect_stride*=shape()[i];
+    }
     return true;
 }
 
 tensor_t Tensor::permute(const std::vector<size_t> &order) const {
-    TO_BE_IMPLEMENTED();
-    return std::shared_ptr<Tensor>(new Tensor(_meta, _storage));
+    std::vector<ptrdiff_t> strides_(ndim());
+    for(size_t i=0;i<ndim();i++){
+        strides_[i]=strides()[order[i]];
+    }
+    std::vector<size_t> shape_(ndim());
+    for(size_t i=0;i<ndim();i++){
+        shape_[i]=shape()[order[i]];
+    }
+    TensorMeta new_meta{dtype(),shape_,strides_};
+    return std::shared_ptr<Tensor>(new Tensor(new_meta, _storage));
 }
 
 tensor_t Tensor::view(const std::vector<size_t> &shape) const {
-    TO_BE_IMPLEMENTED();
-    return std::shared_ptr<Tensor>(new Tensor(_meta, _storage));
+    size_t _ndim = shape.size();
+    size_t stride = 1;
+    std::vector<ptrdiff_t> strides(_ndim);
+    for(size_t i=1; i<=_ndim; i++){
+        strides[_ndim-i] = stride;
+        stride *= shape[_ndim-i];
+    }
+    TensorMeta new_meta{dtype(), shape, strides};
+    return std::shared_ptr<Tensor>(new Tensor(new_meta, _storage));
 }
 
 tensor_t Tensor::slice(size_t dim, size_t start, size_t end) const {
-    TO_BE_IMPLEMENTED();
-    return std::shared_ptr<Tensor>(new Tensor(_meta, _storage));
+    std::vector<size_t> new_shape(ndim());
+    for(size_t i=0; i<ndim(); i++){
+        if(i==dim){
+            new_shape[i]=end-start;
+        }else{
+            new_shape[i]=shape()[i];
+        }
+    }
+    size_t offset= _offset + start * strides()[dim];
+    offset *= elementSize();
+    TensorMeta new_meta{dtype(),new_shape,strides()};
+    return std::shared_ptr<Tensor>(new Tensor(new_meta, _storage, offset));
 }
 
 void Tensor::load(const void *src_) {
-    TO_BE_IMPLEMENTED();
+    // 根据meta从src复制到tensor::storage
+    size_t data_size = elementSize();
+    for(size_t s : _meta.shape){
+        data_size *=s;
+    }
+    std::memcpy(data(), src_, data_size);
 }
 
 tensor_t Tensor::contiguous() const {

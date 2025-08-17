@@ -8,6 +8,7 @@ using tensor_t = std::shared_ptr<Tensor>;
 
 struct TensorMeta {
     llaisysDataType_t dtype;
+    //llaisysDeviceType_t device;
     std::vector<size_t> shape;
     std::vector<ptrdiff_t> strides;
 };
