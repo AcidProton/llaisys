@@ -166,7 +166,7 @@ void Tensor::debug() const {
 bool Tensor::isContiguous() const {
     size_t _ndim = ndim();
     ptrdiff_t expect_stride = 1;
-    for(int i=_ndim-1; i>=0; i--){
+    for(int i=static_cast<int>(_ndim-1); i>=0; i--){
         if(strides()[i]!=expect_stride){
             return false;
         }
