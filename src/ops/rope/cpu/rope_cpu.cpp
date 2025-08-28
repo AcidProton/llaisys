@@ -11,13 +11,13 @@ void rope_(T *out, const T *in, const int64_t *pos_ids, float theta, size_t seq_
         for(size_t i=0; i<seq_len; i++){
             for(size_t h=0; h<nhead; h++){
                 for(size_t j=0; j<d/2; j++){
-                    float phi = pos_ids[i] / pow(theta,2.0*j/d);
+                    double phi = pos_ids[i] / pow(theta,2.0*j/d);
                     float a = llaisys::utils::cast<float>(in[i*nhead*d + h*d + j]);
                     float b = llaisys::utils::cast<float>(in[i*nhead*d + h*d + d/2 + j]);
-                    float sin_val = sin(phi);
-                    float cos_val = cos(phi);
-                    out[i*nhead*d + h*d + j] = llaisys::utils::cast<T>(a*cos_val - b*sin_val);
-                    out[i*nhead*d + h*d + d/2 + j] = llaisys::utils::cast<T>(b*cos_val + a*sin_val);
+                    double sin_val = sin(phi);
+                    double cos_val = cos(phi);
+                    out[i*nhead*d + h*d + j] = llaisys::utils::cast<T>(static_cast<float>(a*cos_val - b*sin_val));
+                    out[i*nhead*d + h*d + d/2 + j] = llaisys::utils::cast<T>(static_cast<float>(b*cos_val + a*sin_val));
                 }
             }
         }
@@ -28,10 +28,10 @@ void rope_(T *out, const T *in, const int64_t *pos_ids, float theta, size_t seq_
                     double phi = pos_ids[i] / pow(theta, 2.0*j/d);;
                     float a = in[i*nhead*d + h*d + j];
                     float b = in[i*nhead*d + h*d + d/2 +j];
-                    float sin_val = sin(phi);
-                    float cos_val = cos(phi);
-                    out[i*nhead*d + h*d + j] = a*cos_val - b*sin_val;
-                    out[i*nhead*d + h*d + d/2 + j] = b*cos_val + a*sin_val;
+                    double sin_val = sin(phi);
+                    double cos_val = cos(phi);
+                    out[i*nhead*d + h*d + j] = static_cast<float>(a*cos_val - b*sin_val);
+                    out[i*nhead*d + h*d + d/2 + j] = static_cast<float>(b*cos_val + a*sin_val);
                 }
             }
         }

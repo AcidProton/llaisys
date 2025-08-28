@@ -9,24 +9,24 @@ void rms_norm_(T *out, const T *in, const T *weight, float eps, size_t row_ele, 
     
     if constexpr (std::is_same_v<T, llaisys::bf16_t> || std::is_same_v<T, llaisys::fp16_t>) {
         for(size_t b=0; b<batch; b++){
-            float sum = 0;
+            double sum = 0;
             for(size_t idx=0; idx<row_ele; idx++){
                 sum += pow(llaisys::utils::cast<float>(in[b*row_ele + idx]),2);
             }
             sum = sqrt(sum/row_ele + eps);
             for(size_t idx=0; idx<row_ele; idx++){
-                out[b*row_ele + idx] = llaisys::utils::cast<T>((llaisys::utils::cast<float>(in[b*row_ele + idx]) * llaisys::utils::cast<float>(weight[idx])) / sum);
+                out[b*row_ele + idx] = llaisys::utils::cast<T>((llaisys::utils::cast<float>(in[b*row_ele + idx]) * llaisys::utils::cast<float>(weight[idx])) / static_cast<float>(sum));
             }
         }
     } else {
         for(size_t b=0; b<batch; b++){
-            float sum = 0;
+            double sum = 0;
             for(size_t idx=0; idx<row_ele; idx++){
                 sum += pow(in[b*row_ele + idx],2);
             }
             sum = sqrt(sum/row_ele + eps);
             for(size_t idx=0; idx<row_ele; idx++){
-                out[b*row_ele + idx] = (in[b*row_ele + idx] * weight[idx]) / sum;
+                out[b*row_ele + idx] = (in[b*row_ele + idx] * weight[idx]) / static_cast<float>(sum);
             }
         }
     }
