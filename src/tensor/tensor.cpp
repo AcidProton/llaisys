@@ -28,11 +28,11 @@ tensor_t Tensor::create(const std::vector<size_t> &shape,
 
     if (device_type == LLAISYS_DEVICE_CPU && core::context().runtime().deviceType() != LLAISYS_DEVICE_CPU) {
         auto storage = core::context().runtime().allocateHostStorage(total_elems * dtype_size);
-        return std::shared_ptr<Tensor>(new Tensor(meta, storage));
+        return std::shared_ptr<Tensor>(new Tensor(meta, storage, 0));
     } else {
         core::context().setDevice(device_type, device);
         auto storage = core::context().runtime().allocateDeviceStorage(total_elems * dtype_size);
-        return std::shared_ptr<Tensor>(new Tensor(meta, storage));
+        return std::shared_ptr<Tensor>(new Tensor(meta, storage, 0));
     }
 }
 
@@ -185,7 +185,7 @@ tensor_t Tensor::permute(const std::vector<size_t> &order) const {
         shape_[i]=shape()[order[i]];
     }
     TensorMeta new_meta{dtype(),shape_,strides_};
-    return std::shared_ptr<Tensor>(new Tensor(new_meta, _storage));
+    return std::shared_ptr<Tensor>(new Tensor(new_meta, _storage, _offset));
 }
 
 tensor_t Tensor::view(const std::vector<size_t> &shape) const {
@@ -197,7 +197,7 @@ tensor_t Tensor::view(const std::vector<size_t> &shape) const {
         stride *= shape[_ndim-i];
     }
     TensorMeta new_meta{dtype(), shape, strides};
-    return std::shared_ptr<Tensor>(new Tensor(new_meta, _storage));
+    return std::shared_ptr<Tensor>(new Tensor(new_meta, _storage, _offset));
 }
 
 tensor_t Tensor::slice(size_t dim, size_t start, size_t end) const {
@@ -209,18 +209,13 @@ tensor_t Tensor::slice(size_t dim, size_t start, size_t end) const {
             new_shape[i]=shape()[i];
         }
     }
-    size_t offset= _offset + start * strides()[dim];
-    offset *= elementSize();
+    size_t offset= _offset + start * strides()[dim] * elementSize();
     TensorMeta new_meta{dtype(),new_shape,strides()};
     return std::shared_ptr<Tensor>(new Tensor(new_meta, _storage, offset));
 }
 
 void Tensor::load(const void *src_) {
-    // 根据meta从src复制到tensor::storage
-    size_t data_size = elementSize();
-    for(size_t s : _meta.shape){
-        data_size *=s;
-    }
+    size_t data_size = _storage->size();
     std::memcpy(data(), src_, data_size);
 }
 

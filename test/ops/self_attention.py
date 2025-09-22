@@ -71,7 +71,7 @@ if __name__ == "__main__":
     testShapes = [
         # qlen, kvlen, nh, nkvh, hd
         (2, 2, 1, 1, 4),
-        (5, 11, 4, 2, 8),
+        (10, 21, 4, 2, 8),
     ]
     testDtypePrec = [
         # type, atol, rtol

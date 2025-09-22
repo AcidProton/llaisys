@@ -31,14 +31,13 @@ __C {
 
     typedef struct LlaisysQwen2Activation {
         llaisysTensor_t tokens; //[seqlen]
+        llaisysTensor_t pos_ids; //[seqlen]
         llaisysTensor_t in_embed; //[seqlen,hidden_size]
         llaisysTensor_t attn_residual;//[seqlen,hidden_size]
         llaisysTensor_t attn_norm;//[seqlen,hidden_size]
         llaisysTensor_t attn_q;//[seqlen,nh,dh]
         llaisysTensor_t attn_k;//[seqlen,nkvh,dh]
-        llaisysTensor_t *attn_v;//layer*[total_len,nkvh,dh] (cache)
         llaisysTensor_t attn_q_pos;//[seqlen,nh,dh]
-        llaisysTensor_t *attn_k_pos;//layer*[total_len,nkvh,dh] (cache)
         llaisysTensor_t attn_val;//[seqlen,nh,dh]
         llaisysTensor_t attn_o;//[seqlen,hidden_size]
         llaisysTensor_t mlp_residual;//[seqlen,hidden_size]
@@ -48,34 +47,38 @@ __C {
         llaisysTensor_t mlp_up;//[seqlen,di]
         llaisysTensor_t mlp_down;//[seqlen,hidden_size]
         llaisysTensor_t mlp_out;//[seqlen,hidden_size]
-        llaisysTensor_t out_norm;//[seqlen,hidden_size]
-        llaisysTensor_t out_embed;//[seqlen,hidden_size]
-        llaisysTensor_t max_embed;//[1,]
-        llaisysTensor_t max_token;//[1,]
+        llaisysTensor_t out_norm;//[1,hidden_size]
+        llaisysTensor_t out_token_val;//[1,voc]
+        llaisysTensor_t max_token_val;//[1,]
+        llaisysTensor_t max_token_ids;//[1,]
     } LlaisysQwen2Activation;
 
+    typedef struct LlaisysQwen2KVcache {
+        llaisysTensor_t *attn_v;//layer*[total_len,nkvh,dh] (cache)
+        llaisysTensor_t *attn_k_pos;//layer*[total_len,nkvh,dh] (cache)
+    } LlaisysQwen2KVcache;
+    
+
     typedef struct LlaisysQwen2Model {  
-        const LlaisysQwen2Meta *meta;
+        LlaisysQwen2Meta *meta;
+        llaisysDeviceType_t device;
+        int device_ids;
         LlaisysQwen2Weights *weights;
     } LlaisysQwen2Model;
 
     typedef struct LlaisysQwen2Context {
-        size_t last_pos;
+        size_t total_len;
         size_t seqlen;
         LlaisysQwen2Activation *activation;
+        LlaisysQwen2KVcache *kvcache;
     } LlaisysQwen2Context;
 
-    __export LlaisysQwen2Model* llaisysQwen2ModelCreate(const LlaisysQwen2Meta *meta, llaisysDeviceType_t device, int *device_ids, int ndevice);
+    __export LlaisysQwen2Model* llaisysQwen2ModelCreate(LlaisysQwen2Meta *meta, llaisysDeviceType_t device, int device_ids);
 
     __export void llaisysQwen2ModelDestroy(LlaisysQwen2Model *model);
 
     __export LlaisysQwen2Weights* llaisysQwen2ModelWeights(LlaisysQwen2Model *model);
 
-    __export LlaisysQwen2Context* llaisysQwen2ModelCreateContext(const LlaisysQwen2Meta *meta, LlaisysQwen2Context *last_context, size_t seqlen, 
-                                                        size_t max_new_token, llaisysDeviceType_t device, int *device_ids, int ndevice);
-
-    __export void llaisysQwen2ModelDestroyContext(const LlaisysQwen2Meta *meta, LlaisysQwen2Context *context);
-
-    __export int64_t llaisysQwen2ModelInfer(LlaisysQwen2Model *model, LlaisysQwen2Context *ctx,int64_t *token_ids, size_t ntoken);
+    __export llaisysTensor_t llaisysQwen2ModelInfer(LlaisysQwen2Model *model, int64_t * token_ids, size_t ntoken, size_t max_new_token);
 }
 #endif // LLAISYS_MODELS_QWEN2_H

@@ -7,19 +7,12 @@
 
 template <typename T>
 void embedding_(T *out, const int64_t *index, const T *weight, size_t embedding_dim, size_t index_size) {
-    
-    if constexpr (std::is_same_v<T, llaisys::bf16_t> || std::is_same_v<T, llaisys::fp16_t>) {
-        for(size_t i=0; i<index_size; i++){
-            int64_t weight_index = index[i];
-            std::memcpy(out+i, weight+weight_index, embedding_dim*2);
-        }
-    } else {
-        for(size_t i=0; i<index_size; i++){
-            int64_t weight_index = index[i];
-            std::memcpy(out+i, weight+weight_index, embedding_dim*4);
-        }
+    for (size_t i = 0; i < index_size; i++) {
+        int64_t token_id = index[i];
+        const T *src_row = weight + token_id * embedding_dim;
+        T *dst_row = out + i * embedding_dim;
+        std::memcpy(dst_row, src_row, embedding_dim * sizeof(T));
     }
-
 }
 
 namespace llaisys::ops::cpu {

@@ -15,8 +15,8 @@ void self_attention_(T *attn_val, const T *q, const T *k, const T *v, float scal
         std::vector<float> attn(seqlen*nhead*total_len);
         for(size_t q_seq=0; q_seq<seqlen; q_seq++){
             for(size_t q_head=0; q_head<nhead; q_head++){
-                size_t mapped_k_head = q_head / nkvhead;
-                float max_val = -1e30f;
+                size_t mapped_k_head = q_head / (nhead / nkvhead);
+                float max_val = std::numeric_limits<float>::lowest();
                 for(size_t k_len=0; k_len<total_len; k_len++){
                     float sum = 0;
                     for(size_t dim=0; dim<d; dim++){
@@ -35,23 +35,24 @@ void self_attention_(T *attn_val, const T *q, const T *k, const T *v, float scal
         for(size_t seq=0; seq<seqlen; seq++){
             for(size_t head=0; head<nhead; head++){
                 float sum =0;
-                for(size_t len=0; len<total_len-seqlen+1+seq; len++){
-                    sum += exp(attn[seq*nhead*total_len + head*total_len + len]);
-                }
+                size_t past_len = total_len - seqlen;
                 for(size_t len=0; len<total_len; len++){
-                    if(len < total_len-seqlen+1+seq){
-                        float ele = exp(attn[seq*nhead*total_len + head*total_len + len]);
-                        attn[seq*nhead*total_len + head*total_len + len] = ele / sum;
+                    if(len <= past_len + seq){
+                        attn[seq*nhead*total_len + head*total_len + len] = exp(attn[seq*nhead*total_len + head*total_len + len]);
+                        sum += attn[seq*nhead*total_len + head*total_len + len];
                     }else{
                         attn[seq*nhead*total_len + head*total_len + len] = 0;
                     }
+                }
+                for(size_t len=0; len<=past_len + seq; len++){
+                    attn[seq*nhead*total_len + head*total_len + len] /= sum;
                 }
             }
         }
         // @ v = [seqlen, nhead, dv]
         for(size_t seq=0; seq<seqlen; seq++){
             for(size_t head=0; head<nhead; head++){
-                size_t mapped_v_head = head / nkvhead;
+                size_t mapped_v_head = head / (nhead / nkvhead);
                 for(size_t d=0; d<dv; d++){
                     float sum = 0;
                     for(size_t len=0; len<total_len; len++){
@@ -66,8 +67,8 @@ void self_attention_(T *attn_val, const T *q, const T *k, const T *v, float scal
         std::vector<float> attn(seqlen*nhead*total_len);
         for(size_t q_seq=0; q_seq<seqlen; q_seq++){
             for(size_t q_head=0; q_head<nhead; q_head++){
-                size_t mapped_k_head = q_head / nkvhead;
-                float max_val = -1e30f;
+                size_t mapped_k_head = q_head / (nhead / nkvhead);
+                float max_val = std::numeric_limits<float>::lowest();
                 for(size_t k_len=0; k_len<total_len; k_len++){
                     float sum = 0;
                     for(size_t dim=0; dim<d; dim++){
@@ -86,23 +87,24 @@ void self_attention_(T *attn_val, const T *q, const T *k, const T *v, float scal
         for(size_t seq=0; seq<seqlen; seq++){
             for(size_t head=0; head<nhead; head++){
                 float sum =0;
-                for(size_t len=0; len<total_len-seqlen+1+seq; len++){
-                    sum += exp(attn[seq*nhead*total_len + head*total_len + len]);
-                }
+                size_t past_len = total_len - seqlen;
                 for(size_t len=0; len<total_len; len++){
-                    if(len < total_len-seqlen+1+seq){
-                        float ele = exp(attn[seq*nhead*total_len + head*total_len + len]);
-                        attn[seq*nhead*total_len + head*total_len + len] = ele / sum;
+                    if(len <= past_len + seq){
+                        attn[seq*nhead*total_len + head*total_len + len] = exp(attn[seq*nhead*total_len + head*total_len + len]);
+                        sum += attn[seq*nhead*total_len + head*total_len + len];
                     }else{
                         attn[seq*nhead*total_len + head*total_len + len] = 0;
                     }
+                }
+                for(size_t len=0; len<=past_len + seq; len++){
+                    attn[seq*nhead*total_len + head*total_len + len] /= sum;
                 }
             }
         }
         // @ v = [seqlen, nhead, dv]
         for(size_t seq=0; seq<seqlen; seq++){
             for(size_t head=0; head<nhead; head++){
-                size_t mapped_v_head = head / nkvhead;
+                size_t mapped_v_head = head / (nhead / nkvhead);
                 for(size_t d=0; d<dv; d++){
                     float sum = 0;
                     for(size_t len=0; len<total_len; len++){

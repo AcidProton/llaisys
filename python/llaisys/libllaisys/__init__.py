@@ -9,6 +9,11 @@ from .llaisys_types import llaisysDeviceType_t, DeviceType
 from .llaisys_types import llaisysDataType_t, DataType
 from .llaisys_types import llaisysMemcpyKind_t, MemcpyKind
 from .llaisys_types import llaisysStream_t
+from .models import LlaisysQwen2Model
+from .models import LlaisysQwen2Meta
+from .models import LlaisysQwen2Context
+from .models import LlaisysQwen2Weights
+from .models import LlaisysQwen2Activation
 from .tensor import llaisysTensor_t
 from .tensor import load_tensor
 from .ops import load_ops
