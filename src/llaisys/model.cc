@@ -14,9 +14,9 @@ __C{
         model->device = device;
         model->device_ids = device_ids;
         model->weights = new LlaisysQwen2Weights;
-        model->weights->in_embed = tensorCreate(std::array{meta->voc,meta->hs}.data(),2,meta->dtype,device,device_ids);
-        model->weights->out_embed = tensorCreate(std::array{meta->voc,meta->hs}.data(),2,meta->dtype,device,device_ids);
-        model->weights->out_norm_w = tensorCreate(std::array{meta->hs}.data(),1,meta->dtype,device,device_ids);
+        model->weights->in_embed = tensorCreate(std::array<size_t,2>{meta->voc,meta->hs}.data(),2,meta->dtype,device,device_ids);
+        model->weights->out_embed = tensorCreate(std::array<size_t,2>{meta->voc,meta->hs}.data(),2,meta->dtype,device,device_ids);
+        model->weights->out_norm_w = tensorCreate(std::array<size_t,1>{meta->hs}.data(),1,meta->dtype,device,device_ids);
         model->weights->attn_norm_w = new llaisysTensor_t[meta->nlayer];
         model->weights->attn_q_w = new llaisysTensor_t[meta->nlayer];
         model->weights->attn_q_b = new llaisysTensor_t[meta->nlayer];
@@ -30,18 +30,18 @@ __C{
         model->weights->mlp_up_w = new llaisysTensor_t[meta->nlayer];
         model->weights->mlp_down_w = new llaisysTensor_t[meta->nlayer];
         for(size_t i=0;i<meta->nlayer;i++){
-            model->weights->attn_norm_w[i]=tensorCreate(std::array{meta->hs}.data(),1,meta->dtype,device,device_ids);
-            model->weights->attn_q_w[i]=tensorCreate(std::array{meta->nh*meta->dh,meta->hs}.data(),2,meta->dtype,device,device_ids);
-            model->weights->attn_q_b[i]=tensorCreate(std::array{meta->nh*meta->dh}.data(),1,meta->dtype,device,device_ids);
-            model->weights->attn_k_w[i]=tensorCreate(std::array{meta->nkvh*meta->dh,meta->hs}.data(),2,meta->dtype,device,device_ids);
-            model->weights->attn_k_b[i]=tensorCreate(std::array{meta->nkvh*meta->dh}.data(),1,meta->dtype,device,device_ids);
-            model->weights->attn_v_w[i]=tensorCreate(std::array{meta->nkvh*meta->dh,meta->hs}.data(),2,meta->dtype,device,device_ids);
-            model->weights->attn_v_b[i]=tensorCreate(std::array{meta->nkvh*meta->dh}.data(),1,meta->dtype,device,device_ids);
-            model->weights->attn_o_w[i]=tensorCreate(std::array{meta->hs,meta->nh*meta->dh}.data(),2,meta->dtype,device,device_ids);
-            model->weights->mlp_norm_w[i]=tensorCreate(std::array{meta->hs}.data(),1,meta->dtype,device,device_ids);
-            model->weights->mlp_up_w[i]=tensorCreate(std::array{meta->di,meta->hs}.data(),2,meta->dtype,device,device_ids);
-            model->weights->mlp_gate_w[i]=tensorCreate(std::array{meta->di,meta->hs}.data(),2,meta->dtype,device,device_ids);
-            model->weights->mlp_down_w[i]=tensorCreate(std::array{meta->hs,meta->di}.data(),2,meta->dtype,device,device_ids);
+            model->weights->attn_norm_w[i]=tensorCreate(std::array<size_t,1>{meta->hs}.data(),1,meta->dtype,device,device_ids);
+            model->weights->attn_q_w[i]=tensorCreate(std::array<size_t,2>{meta->nh*meta->dh,meta->hs}.data(),2,meta->dtype,device,device_ids);
+            model->weights->attn_q_b[i]=tensorCreate(std::array<size_t,1>{meta->nh*meta->dh}.data(),1,meta->dtype,device,device_ids);
+            model->weights->attn_k_w[i]=tensorCreate(std::array<size_t,2>{meta->nkvh*meta->dh,meta->hs}.data(),2,meta->dtype,device,device_ids);
+            model->weights->attn_k_b[i]=tensorCreate(std::array<size_t,1>{meta->nkvh*meta->dh}.data(),1,meta->dtype,device,device_ids);
+            model->weights->attn_v_w[i]=tensorCreate(std::array<size_t,2>{meta->nkvh*meta->dh,meta->hs}.data(),2,meta->dtype,device,device_ids);
+            model->weights->attn_v_b[i]=tensorCreate(std::array<size_t,1>{meta->nkvh*meta->dh}.data(),1,meta->dtype,device,device_ids);
+            model->weights->attn_o_w[i]=tensorCreate(std::array<size_t,2>{meta->hs,meta->nh*meta->dh}.data(),2,meta->dtype,device,device_ids);
+            model->weights->mlp_norm_w[i]=tensorCreate(std::array<size_t,1>{meta->hs}.data(),1,meta->dtype,device,device_ids);
+            model->weights->mlp_up_w[i]=tensorCreate(std::array<size_t,2>{meta->di,meta->hs}.data(),2,meta->dtype,device,device_ids);
+            model->weights->mlp_gate_w[i]=tensorCreate(std::array<size_t,2>{meta->di,meta->hs}.data(),2,meta->dtype,device,device_ids);
+            model->weights->mlp_down_w[i]=tensorCreate(std::array<size_t,2>{meta->hs,meta->di}.data(),2,meta->dtype,device,device_ids);
         }
         
         return model; 
@@ -124,11 +124,11 @@ __C{
             context->total_len = seqlen;
             context->kvcache->attn_v = new llaisysTensor_t[meta->nlayer];
             for(size_t i=0;i<meta->nlayer;i++){
-                context->kvcache->attn_v[i] = tensorCreate(std::array{seqlen+max_new_token,meta->nkvh,meta->dh}.data(),3,meta->dtype,device,device_ids);
+                context->kvcache->attn_v[i] = tensorCreate(std::array<size_t,3>{seqlen+max_new_token,meta->nkvh,meta->dh}.data(),3,meta->dtype,device,device_ids);
             }
             context->kvcache->attn_k_pos = new llaisysTensor_t[meta->nlayer];
             for (size_t i=0; i<meta->nlayer; i++){
-                context->kvcache->attn_k_pos[i] = tensorCreate(std::array{seqlen+max_new_token,meta->nkvh,meta->dh}.data(),3,meta->dtype,device,device_ids);
+                context->kvcache->attn_k_pos[i] = tensorCreate(std::array<size_t,3>{seqlen+max_new_token,meta->nkvh,meta->dh}.data(),3,meta->dtype,device,device_ids);
             }
         }else{ // for first decode
             context->seqlen = seqlen;
@@ -137,31 +137,31 @@ __C{
             context->kvcache->attn_k_pos = last_context->kvcache->attn_k_pos;
             llaisysQwen2ModelDestroyContext(meta, last_context, false);
         }
-        context->activation->tokens = tensorCreate(std::array{seqlen}.data(),1,LLAISYS_DTYPE_I64,device,device_ids);
-        context->activation->pos_ids = tensorCreate(std::array{seqlen}.data(),1,LLAISYS_DTYPE_I64,device,device_ids);
+        context->activation->tokens = tensorCreate(std::array<size_t,1>{seqlen}.data(),1,LLAISYS_DTYPE_I64,device,device_ids);
+        context->activation->pos_ids = tensorCreate(std::array<size_t,1>{seqlen}.data(),1,LLAISYS_DTYPE_I64,device,device_ids);
         int64_t* pos_ids = (int64_t*)tensorGetData(context->activation->pos_ids);
         for(size_t i=0;i<seqlen;i++){
             pos_ids[i] = (int64_t)(context->total_len - context->seqlen + i);
         }
-        context->activation->in_embed = tensorCreate(std::array{seqlen,meta->hs}.data(),2,meta->dtype,device,device_ids);
-        context->activation->attn_residual = tensorCreate(std::array{seqlen,meta->hs}.data(),2,meta->dtype,device,device_ids);
-        context->activation->attn_norm = tensorCreate(std::array{seqlen,meta->hs}.data(),2,meta->dtype,device,device_ids);
-        context->activation->attn_q = tensorCreate(std::array{seqlen,meta->nh,meta->dh}.data(),3,meta->dtype,device,device_ids);
-        context->activation->attn_k = tensorCreate(std::array{seqlen,meta->nkvh,meta->dh}.data(),3,meta->dtype,device,device_ids);
-        context->activation->attn_q_pos = tensorCreate(std::array{seqlen,meta->nh,meta->dh}.data(),3,meta->dtype,device,device_ids);
-        context->activation->attn_val = tensorCreate(std::array{seqlen,meta->nh,meta->dh}.data(),3,meta->dtype,device,device_ids);
-        context->activation->attn_o = tensorCreate(std::array{seqlen,meta->hs}.data(),2,meta->dtype,device,device_ids);
-        context->activation->mlp_residual = tensorCreate(std::array{seqlen,meta->hs}.data(),2,meta->dtype,device,device_ids);
-        context->activation->mlp_norm = tensorCreate(std::array{seqlen,meta->hs}.data(),2,meta->dtype,device,device_ids);
-        context->activation->mlp_down = tensorCreate(std::array{seqlen,meta->hs}.data(),2,meta->dtype,device,device_ids);
-        context->activation->mlp_out = tensorCreate(std::array{seqlen,meta->hs}.data(),2,meta->dtype,device,device_ids);
-        context->activation->mlp_gate = tensorCreate(std::array{seqlen,meta->di}.data(),2,meta->dtype,device,device_ids);
-        context->activation->mlp_active = tensorCreate(std::array{seqlen,meta->di}.data(),2,meta->dtype,device,device_ids);
-        context->activation->mlp_up = tensorCreate(std::array{seqlen,meta->di}.data(),2,meta->dtype,device,device_ids);
-        context->activation->out_norm = tensorCreate(std::array{size_t(1),meta->hs}.data(),2,meta->dtype,device,device_ids);
-        context->activation->out_token_val = tensorCreate(std::array{size_t(1),meta->voc}.data(),2,meta->dtype,device,device_ids);
-        context->activation->max_token_val = tensorCreate(std::array{size_t(1)}.data(),1,meta->dtype,device,device_ids);
-        context->activation->max_token_ids = tensorCreate(std::array{size_t(1)}.data(),1,llaisysDataType_t::LLAISYS_DTYPE_I64,device,device_ids);
+        context->activation->in_embed = tensorCreate(std::array<size_t,2>{seqlen,meta->hs}.data(),2,meta->dtype,device,device_ids);
+        context->activation->attn_residual = tensorCreate(std::array<size_t,2>{seqlen,meta->hs}.data(),2,meta->dtype,device,device_ids);
+        context->activation->attn_norm = tensorCreate(std::array<size_t,2>{seqlen,meta->hs}.data(),2,meta->dtype,device,device_ids);
+        context->activation->attn_q = tensorCreate(std::array<size_t,3>{seqlen,meta->nh,meta->dh}.data(),3,meta->dtype,device,device_ids);
+        context->activation->attn_k = tensorCreate(std::array<size_t,3>{seqlen,meta->nkvh,meta->dh}.data(),3,meta->dtype,device,device_ids);
+        context->activation->attn_q_pos = tensorCreate(std::array<size_t,3>{seqlen,meta->nh,meta->dh}.data(),3,meta->dtype,device,device_ids);
+        context->activation->attn_val = tensorCreate(std::array<size_t,3>{seqlen,meta->nh,meta->dh}.data(),3,meta->dtype,device,device_ids);
+        context->activation->attn_o = tensorCreate(std::array<size_t,2>{seqlen,meta->hs}.data(),2,meta->dtype,device,device_ids);
+        context->activation->mlp_residual = tensorCreate(std::array<size_t,2>{seqlen,meta->hs}.data(),2,meta->dtype,device,device_ids);
+        context->activation->mlp_norm = tensorCreate(std::array<size_t,2>{seqlen,meta->hs}.data(),2,meta->dtype,device,device_ids);
+        context->activation->mlp_down = tensorCreate(std::array<size_t,2>{seqlen,meta->hs}.data(),2,meta->dtype,device,device_ids);
+        context->activation->mlp_out = tensorCreate(std::array<size_t,2>{seqlen,meta->hs}.data(),2,meta->dtype,device,device_ids);
+        context->activation->mlp_gate = tensorCreate(std::array<size_t,2>{seqlen,meta->di}.data(),2,meta->dtype,device,device_ids);
+        context->activation->mlp_active = tensorCreate(std::array<size_t,2>{seqlen,meta->di}.data(),2,meta->dtype,device,device_ids);
+        context->activation->mlp_up = tensorCreate(std::array<size_t,2>{seqlen,meta->di}.data(),2,meta->dtype,device,device_ids);
+        context->activation->out_norm = tensorCreate(std::array<size_t,2>{size_t(1),meta->hs}.data(),2,meta->dtype,device,device_ids);
+        context->activation->out_token_val = tensorCreate(std::array<size_t,2>{size_t(1),meta->voc}.data(),2,meta->dtype,device,device_ids);
+        context->activation->max_token_val = tensorCreate(std::array<size_t,1>{size_t(1)}.data(),1,meta->dtype,device,device_ids);
+        context->activation->max_token_ids = tensorCreate(std::array<size_t,1>{size_t(1)}.data(),1,llaisysDataType_t::LLAISYS_DTYPE_I64,device,device_ids);
         return context;
     } 
 
@@ -291,7 +291,7 @@ __C{
 
     llaisysTensor_t llaisysQwen2ModelInfer(LlaisysQwen2Model *model, int64_t * token_ids, size_t ntoken, size_t max_new_token){
         printf("start infer\n");
-        llaisysTensor_t out_token_tensor = tensorCreate(std::array{max_new_token}.data(),1,LLAISYS_DTYPE_I64,model->device,model->device_ids);
+        llaisysTensor_t out_token_tensor = tensorCreate(std::array<size_t,1>{max_new_token}.data(),1,LLAISYS_DTYPE_I64,model->device,model->device_ids);
         int64_t* out_token = (int64_t*)out_token_tensor->tensor->data();
         for(size_t i=0;i<max_new_token;i++){
             out_token[i] = (int64_t)(model->meta->end_token);
