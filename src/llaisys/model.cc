@@ -209,31 +209,30 @@ __C{
         return val_ptr[0];
     }
 
-    void checkTensor(const char* tag, llaisysTensor_t t){
-        bool toPrint = false;
-        size_t numel = t->tensor->numel();
-        llaisys::bf16_t* ptr = reinterpret_cast<llaisys::bf16_t *>(t->tensor->data());
-        for(size_t i=0;i<numel;i++){
-            llaisys::bf16_t* ele_ptr = ptr+i;
-            float ele = llaisys::utils::cast<float>(*ele_ptr);
-            if (std::isnan(ele) || std::abs(ele) > 1e6f) {
-                printf("!discover illegal value: %s \n",tag);
-                printf("total ele: %ld \n",numel);
-                printf("illegal ele index: %ld \n",i);
-                toPrint = true;
-                break;
-            }
-        }//检查decode时，哪层的值变非法了
-        if(toPrint){
-            for(size_t i=0;i<numel;i++){
-                llaisys::bf16_t* ele_ptr = ptr+i;
-                float ele = llaisys::utils::cast<float>(*ele_ptr);
-                printf("%f ",ele);
-            }
-            exit(9);
-        }
-
-    }
+    // void checkTensor(const char* tag, llaisysTensor_t t){
+    //     bool toPrint = false;
+    //     size_t numel = t->tensor->numel();
+    //     llaisys::bf16_t* ptr = reinterpret_cast<llaisys::bf16_t *>(t->tensor->data());
+    //     for(size_t i=0;i<numel;i++){
+    //         llaisys::bf16_t* ele_ptr = ptr+i;
+    //         float ele = llaisys::utils::cast<float>(*ele_ptr);
+    //         if (std::isnan(ele) || std::abs(ele) > 1e6f) {
+    //             printf("!discover illegal value: %s \n",tag);
+    //             printf("total ele: %zd \n",numel);
+    //             printf("illegal ele index: %zd \n",i);
+    //             toPrint = true;
+    //             break;
+    //         }
+    //     }//检查decode时，哪层的值变非法了
+    //     if(toPrint){
+    //         for(size_t i=0;i<numel;i++){
+    //             llaisys::bf16_t* ele_ptr = ptr+i;
+    //             float ele = llaisys::utils::cast<float>(*ele_ptr);
+    //             printf("%f ",ele);
+    //         }
+    //         exit(9);
+    //     }
+    // }
 
     int64_t llaisysQwen2ModelDecode(LlaisysQwen2Model *model, LlaisysQwen2Context *ctx, int64_t *token_ids){
         //prefil seqlen=ntoken
@@ -291,7 +290,6 @@ __C{
     }
 
     llaisysTensor_t llaisysQwen2ModelInfer(LlaisysQwen2Model *model, int64_t * token_ids, size_t ntoken, size_t max_new_token){
-        printf("start infer\n");
         llaisysTensor_t out_token_tensor = tensorCreate(std::array<size_t,1>{max_new_token}.data(),1,LLAISYS_DTYPE_I64,model->device,model->device_ids);
         int64_t* out_token = (int64_t*)out_token_tensor->tensor->data();
         for(size_t i=0;i<max_new_token;i++){
@@ -299,16 +297,11 @@ __C{
         }
         size_t token_cnt = 0;
 
-        printf("prefill token:\n");
-        for(size_t i=0;i<ntoken;i++){
-            printf("%ld ",token_ids[i]);
-        }
 
         //prefill seqlen = ntoken
         LlaisysQwen2Context* ctx = llaisysQwen2ModelCreateContext(model, nullptr, ntoken, max_new_token);
         int64_t cur_token = llaisysQwen2ModelPrefill(model, ctx, token_ids);
         out_token[token_cnt++] = cur_token;
-        printf("finish prefill. get token: %ld\n",cur_token);
 
         //decode seqlen=1
         ctx = llaisysQwen2ModelCreateContext(model, ctx, 1, max_new_token);
@@ -316,7 +309,6 @@ __C{
             ctx = llaisysQwen2ModelUpdateContext(ctx,1);
             cur_token = llaisysQwen2ModelDecode(model, ctx, &cur_token);
             out_token[token_cnt++] = cur_token;
-            printf("decode one round. get token: %ld\n",cur_token);
         }
         llaisysQwen2ModelDestroyContext(model->meta, ctx, true);
         return out_token_tensor;
