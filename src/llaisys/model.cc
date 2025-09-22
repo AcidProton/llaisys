@@ -4,6 +4,7 @@
 #include "math.h"
 #include <cstring>
 #include <cmath>
+#include <array>
 
 __C{
     LlaisysQwen2Model *llaisysQwen2ModelCreate(LlaisysQwen2Meta *meta, llaisysDeviceType_t device, int device_ids){
@@ -173,12 +174,12 @@ __C{
         for(size_t i=0;i<model->meta->nlayer;i++){
             llaisysRmsNorm(ctx->activation->attn_norm, ctx->activation->attn_residual, model->weights->attn_norm_w[i], model->meta->epsilon);
             // qkv
-            llaisysTensor_t attn_q_2d = tensorView(ctx->activation->attn_q,std::array{ctx->seqlen*model->meta->nh,model->meta->dh}.data(),2);
+            llaisysTensor_t attn_q_2d = tensorView(ctx->activation->attn_q,std::array<size_t,2>{ctx->seqlen*model->meta->nh,model->meta->dh}.data(),2);
             llaisysLinear(attn_q_2d, ctx->activation->attn_norm, model->weights->attn_q_w[i], model->weights->attn_q_b[i]);
-            llaisysTensor_t attn_k_2d = tensorView(ctx->activation->attn_k,std::array{ctx->seqlen*model->meta->nkvh,model->meta->dh}.data(),2);
+            llaisysTensor_t attn_k_2d = tensorView(ctx->activation->attn_k,std::array<size_t,2>{ctx->seqlen*model->meta->nkvh,model->meta->dh}.data(),2);
             llaisysLinear(attn_k_2d, ctx->activation->attn_norm, model->weights->attn_k_w[i], model->weights->attn_k_b[i]);
             llaisysTensor_t attn_v=tensorSlice(ctx->kvcache->attn_v[i], 0, ctx->total_len-ctx->seqlen, ctx->total_len);
-            llaisysTensor_t attn_v_2d = tensorView(attn_v,std::array{ctx->seqlen*model->meta->nkvh,model->meta->dh}.data(),2);
+            llaisysTensor_t attn_v_2d = tensorView(attn_v,std::array<size_t,2>{ctx->seqlen*model->meta->nkvh,model->meta->dh}.data(),2);
             llaisysLinear(attn_v_2d, ctx->activation->attn_norm, model->weights->attn_v_w[i], model->weights->attn_v_b[i]);
             // q k rope
             llaisysROPE(ctx->activation->attn_q_pos, ctx->activation->attn_q, ctx->activation->pos_ids, model->meta->theta);
@@ -188,7 +189,7 @@ __C{
             llaisysTensor_t attn_k_pos_total=tensorSlice(ctx->kvcache->attn_k_pos[i], 0, 0, ctx->total_len);
             llaisysTensor_t attn_v_total=tensorSlice(ctx->kvcache->attn_v[i], 0, 0, ctx->total_len);
             llaisysSelfAttention(ctx->activation->attn_val, ctx->activation->attn_q_pos, attn_k_pos_total, attn_v_total, (float)(1.0/sqrt(model->meta->dh)));
-            llaisysTensor_t attn_val=tensorView(ctx->activation->attn_val,std::array{ctx->seqlen,model->meta->nh*model->meta->dh}.data(),2);
+            llaisysTensor_t attn_val=tensorView(ctx->activation->attn_val,std::array<size_t,2>{ctx->seqlen,model->meta->nh*model->meta->dh}.data(),2);
             llaisysLinear(ctx->activation->attn_o, attn_val, model->weights->attn_o_w[i], nullptr);
             llaisysAdd(ctx->activation->mlp_residual, ctx->activation->attn_residual, ctx->activation->attn_o);
             //mlp
@@ -243,13 +244,13 @@ __C{
             // printf("in layer: %ld \n",i);
             llaisysRmsNorm(ctx->activation->attn_norm, ctx->activation->attn_residual, model->weights->attn_norm_w[i], model->meta->epsilon);
             // qkv
-            llaisysTensor_t attn_q_2d = tensorView(ctx->activation->attn_q,std::array{ctx->seqlen*model->meta->nh,model->meta->dh}.data(),2);
+            llaisysTensor_t attn_q_2d = tensorView(ctx->activation->attn_q,std::array<size_t,2>{ctx->seqlen*model->meta->nh,model->meta->dh}.data(),2);
             llaisysLinear(attn_q_2d, ctx->activation->attn_norm, model->weights->attn_q_w[i], model->weights->attn_q_b[i]);
-            llaisysTensor_t attn_k_2d = tensorView(ctx->activation->attn_k,std::array{ctx->seqlen*model->meta->nkvh,model->meta->dh}.data(),2);
+            llaisysTensor_t attn_k_2d = tensorView(ctx->activation->attn_k,std::array<size_t,2>{ctx->seqlen*model->meta->nkvh,model->meta->dh}.data(),2);
             llaisysLinear(attn_k_2d, ctx->activation->attn_norm, model->weights->attn_k_w[i], model->weights->attn_k_b[i]);
             llaisysTensor_t attn_v=tensorSlice(ctx->kvcache->attn_v[i], 0, ctx->total_len-ctx->seqlen, ctx->total_len);
             
-            llaisysTensor_t attn_v_2d = tensorView(attn_v,std::array{ctx->seqlen*model->meta->nkvh,model->meta->dh}.data(),2);
+            llaisysTensor_t attn_v_2d = tensorView(attn_v,std::array<size_t,2>{ctx->seqlen*model->meta->nkvh,model->meta->dh}.data(),2);
             llaisysLinear(attn_v_2d, ctx->activation->attn_norm, model->weights->attn_v_w[i], model->weights->attn_v_b[i]);
             //printf("debug attn_v\n");
             //tensorDebug(attn_v_2d);
@@ -267,7 +268,7 @@ __C{
             llaisysSelfAttention(ctx->activation->attn_val, ctx->activation->attn_q_pos, attn_k_pos_total, attn_v_total, (float)(1.0/sqrt(model->meta->dh)));
             
             // checkTensor("ctx->activation->attn_val",ctx->activation->attn_val);
-            llaisysTensor_t attn_val=tensorView(ctx->activation->attn_val,std::array{ctx->seqlen,model->meta->nh*model->meta->dh}.data(),2);
+            llaisysTensor_t attn_val=tensorView(ctx->activation->attn_val,std::array<size_t,2>{ctx->seqlen,model->meta->nh*model->meta->dh}.data(),2);
             llaisysLinear(ctx->activation->attn_o, attn_val, model->weights->attn_o_w[i], nullptr);
             
             // checkTensor("ctx->activation->attn_o",ctx->activation->attn_o);
